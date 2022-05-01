@@ -1,0 +1,24 @@
+#include "BluetoothSerial.h" //Header File for Serial Bluetooth, will be added by default into Arduino
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
+BluetoothSerial ESP_BT; //Object for Bluetooth
+
+#define Pulsador 4
+
+int puikk = 0;
+void setup() {
+  ESP_BT.begin("Ymate_kudasai");
+  Serial.begin(115200);
+  pinMode(Pulsador, INPUT);
+}
+
+void loop() {
+  puikk = digitalRead(Pulsador);
+  Serial.println(puikk);
+  ESP_BT.println(puikk);
+  if (puikk == 1){
+    delay(1500);
+  }
+  delay(100);
+}
