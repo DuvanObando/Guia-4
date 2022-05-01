@@ -1,0 +1,157 @@
+#include "BluetoothSerial.h" //Header File for Serial Bluetooth, will be added by default into Arduino
+
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define RESET_OLED -1
+#define DIREC_OLED 0x3C
+
+Adafruit_SSD1306 display(SCREEN_WIDTH,SCREEN_HEIGHT,&Wire,RESET_OLED);
+
+#define IMG_WIDTH 84
+#define IMG_HEIGHT 52
+
+//Servomotor
+#include <ESP32Servo.h>
+Servo Servomotor;
+#define ServoPin 26
+
+BluetoothSerial ESP_BT; //Object for Bluetooth
+
+int incoming;
+int LEDR_BUILTIN = 19;
+int LEDG_BUILTIN = 18;
+int LEDB_BUILTIN = 5;
+
+
+#define Rojo_Canal 3
+#define Verde_canal 4  
+#define Azul_canal 5 
+#define pwm_Frecuencia 10000 
+#define pwm_resolucion 8
+
+void setup() {
+
+ Serial.begin(9600); //Start Serial monitor in 9600
+ ESP_BT.begin("Yamate_kudasai"); //Entre las comillas incluir tu numero de matricula
+ Serial.println("Bluetooth Device is Ready to Pair");
+
+ if(!display.begin(SSD1306_SWITCHCAPVCC, DIREC_OLED)){
+     Serial.println(F("No se encontro la pantalla OLED"));
+    }
+
+  ledcAttachPin(LEDR_BUILTIN, Rojo_Canal);  
+  ledcAttachPin(LEDG_BUILTIN, Verde_canal);  
+  ledcAttachPin(LEDB_BUILTIN, Azul_canal);   
+  ledcSetup(Rojo_Canal, pwm_Frecuencia, pwm_resolucion);  
+  ledcSetup(Verde_canal, pwm_Frecuencia, pwm_resolucion);  
+  ledcSetup(Azul_canal, pwm_Frecuencia, pwm_resolucion);   
+
+  display.clearDisplay(); 
+  display.setTextSize(1); 
+  display.setTextColor(WHITE); 
+  display.setCursor(0,0); 
+  display.println("LED RGB Y SERVOMOTOR"); 
+  display.display();
+
+  RGB_Color(0,0,0);
+
+  Servomotor.attach(ServoPin);
+  Servomotor.write(180);
+
+} 
+
+void loop() {
+
+ if (ESP_BT.available()){ //Check if we receive anything from Bluetooth
+    incoming = ESP_BT.read(); //Read what we recevive
+    Serial.print("Received:"); Serial.println(incoming);
+
+ if (incoming == 82){ //R
+    RGB_Color(255,0,0); // Rojo  
+    delay(50); 
+    ESP_BT.println("LED ROJO ENCENDIDO");
+    display.clearDisplay(); 
+    display.setTextSize(1); 
+    display.setTextColor(WHITE); 
+    display.setCursor(0,0); 
+    display.println("LED ROJO ENCENDIDO"); 
+    display.display();
+   }
+
+ if (incoming == 71){ //G
+    RGB_Color(0,255,0); // Verde  
+    delay(50);
+    ESP_BT.println("LED VERDE ENCENDIDO");
+    display.clearDisplay(); 
+    display.setTextSize(1); 
+    display.setTextColor(WHITE); 
+    display.setCursor(0,0); 
+    display.println("LED VERDE ENCENDIDO"); 
+    display.display();
+   }
+
+ if (incoming == 66){ //B
+    RGB_Color(0,0,255); // Azul  
+    delay(50);
+    ESP_BT.println("LED AZUL ENCENDIDO");
+    display.clearDisplay(); 
+    display.setTextSize(1); 
+    display.setTextColor(WHITE); 
+    display.setCursor(0,0); 
+    display.println("LED AZUL ENCENDIDO"); 
+    display.display();
+   }
+
+ if (incoming == 48){
+    RGB_Color(0,0,0);
+    ESP_BT.println("LED RGB APAGADO ");
+    display.clearDisplay(); 
+    display.setTextSize(1); 
+    display.setTextColor(WHITE); 
+    display.setCursor(0,0); 
+    display.println("LED RGB APAGADO"); 
+    display.display();
+  }
+ if(incoming == 68){
+    Servomotor.write(0);
+    ESP_BT.print("SERVOMOTOR: ");
+    ESP_BT.println("GIRO A LA DERECHA");
+    display.clearDisplay(); 
+    display.setTextSize(1); 
+    display.setTextColor(WHITE);
+    display.setCursor(3,0); 
+    display.println("SERVOMOTOR");  
+    display.setCursor(3,15); 
+    display.println("GIRO A LA DERECHA"); 
+    display.display();  
+  }
+
+ if(incoming == 73){
+    Servomotor.write(180);
+    ESP_BT.print("SERVOMOTOR: ");
+    ESP_BT.println("GIRO A LA IZQUIERDA");
+    display.clearDisplay(); 
+    display.setTextSize(1); 
+    display.setTextColor(WHITE);
+    display.setCursor(3,0); 
+    display.println("SERVOMOTOR");  
+    display.setCursor(3,15); 
+    display.println("GIRO A LA IZQUIERDA"); 
+    display.display();  
+  }
+    
+}
+delay(20);
+}
+
+void RGB_Color(int i, int j, int k){  
+  i=255-i;
+  j=255-j;
+  k=255-k;
+  ledcWrite(Rojo_Canal, i);   
+  ledcWrite(Verde_canal, j);  
+  ledcWrite(Azul_canal, k);   
+  }
